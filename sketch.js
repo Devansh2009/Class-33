@@ -1,12 +1,13 @@
 const Engine = Matter.Engine;
-const World= Matter.World;
+const World = Matter.World;
 const Bodies = Matter.Bodies;
 const Constraint = Matter.Constraint;
 
 var engine, world;
 var box1, pig1,pig3;
 var backgroundImg,platform;
-var bird, slingshot;
+var slingshot;
+var birds = []
 
 var gameState = "onSling";
 var bg = "sprites/bg1.png";
@@ -41,6 +42,14 @@ function setup(){
     log5 = new Log(870,120,150, -PI/7);
 
     bird = new Bird(200,50);
+    bird2 = new Bird(146,217);
+    bird3 = new Bird(93,200);
+    bird4 = new Bird(34,200);
+    
+    birds.push(bird4)
+    birds.push(bird3)
+    birds.push(bird2)
+    birds.push(bird)
 
     //log6 = new Log(230,180,80, PI/2);
     slingshot = new SlingShot(bird.body,{x:200, y:50});
@@ -49,7 +58,7 @@ function setup(){
 function draw(){
     if(backgroundImg)
         background(backgroundImg);
-    
+        text(mouseX+","+mouseY,mouseX,mouseY)
         noStroke();
         textSize(35)
         fill("white")
@@ -75,43 +84,50 @@ function draw(){
     log5.display();
 
     bird.display();
+    bird2.display();
+    bird3.display();
+    bird4.display();
     platform.display();
     //log6.display();
     slingshot.display();    
 }
 
 function mouseDragged(){
-    //if (gameState!=="launched"){
-        Matter.Body.setPosition(bird.body, {x: mouseX , y: mouseY});
-    //}
+    if (gameState!=="launched"){
+        Matter.Body.setPosition(birds[birds.length-1].body, {x: mouseX , y: mouseY});
+        Matter.Body.applyForce(birds[birds.length-1].body, birds[birds.lenght-1].body.position, {x: 5, y: -5})
+    }
 }
 
 
 function mouseReleased(){
     slingshot.fly();
+    birds.pop()
     gameState = "launched";
 }
 
 function keyPressed(){
-    if(keyCode === 32){
-       slingshot.attach(bird.body);
+    if(keyCode === 32 && gameState === "launched"){
+       if (birds.length > 0) {
+        slingshot.attach(birds[birds.length -1].body);
+        Matter.Body.setPosition(birds[birds.length-1].body,{x:200, y:50})
+        gameState = "onSling"
+       }
     }
 }
 
 async function getBackgroundImg(){
-    var response = await fetch("http://worldtimeapi.org/api/timezone/Asia/Kolkata");
-    var responseJSON = await response.json();
-
-    var datetime = responseJSON.datetime;
-    var hour = datetime.slice(11,13);
-    
-    if(hour>=0600 && hour<=1900){
-        bg = "sprites/bg1.png";
+    var response = await fetch("http://worldclockapi.com/api/json/pst/now")
+    var jsonResponse = await response.json()
+    console.log(jsonResponse.currentDateTime)
+    var dateTime = jsonResponse.currentDateTime
+    var hours = dateTime.slice(11,13)
+    console.log(hours)
+    if (hours>=5 && hours <=15) {
+        bg = "sprites/bg.png"
     }
-    else{
-        bg = "sprites/bg2.jpg";
+    else {
+        bg = "sprites/bg2.jpg"
     }
-
-    backgroundImg = loadImage(bg);
-    console.log(backgroundImg);
+    backgroundImg = loadImage(bg)
 }
